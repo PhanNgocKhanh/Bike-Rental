@@ -1,0 +1,129 @@
+<?php
+    session_start();
+
+	// Set the timezone to Singapore
+    date_default_timezone_set('Asia/Singapore');
+
+	// Get the variables from the session
+	$user_id = $_SESSION['user_id'];
+
+	// database connection
+	$serverName = "localhost:3307";
+	$userName = "root";
+	$password = "";
+	$dbName = "a2_db";
+	$dbTable1 = "bike";
+	$dbTable2 = "transaction";
+
+	$conn = new mysqli($serverName, $userName, $password, $dbName);
+	if($conn->connect_error){
+		die("Fail to connect server. Error: " . $conn->connect_error . "<br>");
+	}
+
+	// sql query to list the current renting
+	$sql = "SELECT transaction.transaction_id, transaction.bike_id, transaction.user_id, transaction.rent_start_time,
+	               bike.rent_location, bike.hourly_cost, bike.description
+            FROM $dbTable2 AS transaction
+            LEFT JOIN $dbTable1 AS bike ON bike.bike_id = transaction.bike_id
+			WHERE transaction.rent_end_time IS NULL";
+	$result = $conn->query($sql);		
+?>
+
+<html>
+<head>
+    <title>Current Renting</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+        }
+        h1 {
+            color: #A7C7E7; /* Pastel blue color */
+            text-align: center;
+            margin-top: 20px;
+        }
+        table {
+            width: 80%;
+            margin: 20px auto;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #A7C7E7; /* Pastel blue color */
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        tr:hover {
+            background-color: #ddd;
+        }
+        .button-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Current Renting Bikes</h1>
+
+    <?php
+        // Display result
+        if ($result->num_rows > 0) {
+            echo "<table>
+            <tr>
+                <th>Transaction ID</th>
+                <th>Bike ID</th>
+                <th>Renter ID</th>
+                <th>Location</th>
+                <th>Description</th>
+                <th>Rent Start Time</th>
+                <th>Hourly Cost</th>
+            </tr>";
+
+            while ($r = $result->fetch_assoc()) {
+                echo "<tr>
+                    <td>" . $r['transaction_id'] . "</td>
+                    <td>" . $r['bike_id'] . "</td>
+                    <td>" . $r['user_id'] . "</td>
+                    <td>" . $r['rent_location'] . "</td>
+                    <td>" . $r['description'] . "</td>
+                    <td>" . $r['rent_start_time'] . "</td>
+                    <td>" . $r['hourly_cost'] . "</td>
+                </tr>";
+            }
+
+            echo "</table>";
+        } else {
+            echo "<p style='text-align: center;'>No current renting</p>";
+        }
+
+        $conn->close();
+    ?>
+
+    <div class="button-container">
+        <form method="POST" action="admin.php">
+            <button type="submit">Back</button>
+        </form>
+    </div>
+</body>
+</html>
